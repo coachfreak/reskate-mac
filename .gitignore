@@ -1,0 +1,4 @@
+build/
+.cache/
+Resources/zstd
+.DS_Store
