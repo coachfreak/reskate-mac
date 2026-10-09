@@ -42,6 +42,33 @@ Everything lives in `~/Library/Application Support/ReSkate/`, and the game folde
 | DualShock 4 over Bluetooth is detected but gives no input | `winebus` `DisableHidraw=1`: the game uses the SDL/XInput device instead of raw Bluetooth HID. |
 | Wrong scaling on Retina displays | `RetinaMode=N`, `LogPixels=96` |
 
+## ReSkate Studio (optional)
+
+The launcher can also install and open **ReSkate Studio**, the community tool for making maps and cosmetic mods (`.fbmod`).
+
+ReSkate Studio has no public download. It's shared on the ReSkate Discord as `ReSkate_Studio.zip`, so the launcher doesn't download it, you pick the zip yourself. An extracted folder or an installer `.exe` works too.
+
+- **First install:** turn on **ReSkate Studio (optional)** before clicking INSTALL and pick the zip.
+- **Later:** click **STUDIO** on the main screen and pick the zip.
+
+Studio goes into the same Windows environment as the game and Steam, so it sees your ReSkate install and its own Launch button works. The launcher:
+
+- copies Studio to `C:\ReSkate Studio`, or runs its installer if the zip contains one;
+- checks which .NET runtime the Studio exe needs and installs it from Microsoft: .NET Framework 4.8 (set up the way winetricks does it, replacing Wine Mono), or the matching .NET Desktop Runtime;
+- maps your ReSkate folder to drive **R:** and opens Studio with it already selected (`--game R:\`), so Build & Deploy writes straight into your game.
+
+After that, **STUDIO** opens it. TOOLS → Update Studio… copies a newer zip over the old files, so your settings and projects stay. WPF runs with software rendering under Wine, which is reliable but slower than on Windows.
+
+## ReShade (optional)
+
+Turn on **ReShade** before INSTALL, or later under TOOLS → ReShade. The launcher downloads ReShade (checked against its SHA-256) and its standard shaders, and on every PLAY:
+
+- puts `dxgi.dll` (ReShade), `ReShade.ini` and `reshade-shaders` beside `Skate.exe`;
+- tells Wine to load that `dxgi.dll` for `Skate.exe` only, so the ReSkate launcher and Steam stay untouched;
+- writes the menu key you picked under TOOLS → ReShade Menu Key (Home by default; Insert and ` are taken by ReSkate). On a Mac keyboard, Home is fn + Left Arrow.
+
+Turning it off switches `Skate.exe` back to Wine's own `dxgi.dll`, so the files can stay. ReShade runs on DirectX 12 through GPTK; effects that read the depth buffer work too.
+
 ## Requirements
 
 - Apple Silicon Mac (M1 or newer). Tested on macOS 27 with M-series chips.

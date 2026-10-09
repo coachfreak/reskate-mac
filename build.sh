@@ -51,8 +51,8 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
   <key>CFBundleExecutable</key><string>ReSkate</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>1.0</string>
-  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleShortVersionString</key><string>1.1.0</string>
+  <key>CFBundleVersion</key><string>2</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.games</string>
   <key>NSHighResolutionCapable</key><true/>
@@ -66,10 +66,9 @@ EOF
 codesign --force --deep -s - "$APP"
 echo "Built: $APP"
 
-# Release disk image: the app plus an Applications shortcut to drag it onto
-mkdir -p build/dmg
-cp -R "$APP" build/dmg/
-ln -s /Applications build/dmg/Applications
-hdiutil create -volname "ReSkate" -srcfolder build/dmg -ov -format UDZO build/ReSkate.dmg >/dev/null
-rm -r ./build/dmg
+# Release disk image: app + Applications shortcut on a styled background (dmgbuild writes the layout, no Finder scripting)
+[[ -x .cache/venv/bin/dmgbuild ]] || { python3 -m venv .cache/venv && .cache/venv/bin/pip install -q dmgbuild; }
+swift Icon/make_dmg_background.swift Resources/Fonts build/dmg-bg.png build/dmg-bg@2x.png
+tiffutil -cathidpicheck build/dmg-bg.png build/dmg-bg@2x.png -out build/dmg-bg.tiff 2>/dev/null
+.cache/venv/bin/dmgbuild -s dmg_settings.py -D app="$APP" -D background=build/dmg-bg.tiff "ReSkate" build/ReSkate.dmg >/dev/null
 echo "Built: build/ReSkate.dmg"
