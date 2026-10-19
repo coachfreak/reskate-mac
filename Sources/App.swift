@@ -107,6 +107,10 @@ final class Launcher: ObservableObject {
         refreshBackground()
         if CommandLine.arguments.contains("--setup") { Task { startSetup() } }
         Task {
+            try? await Task.sleep(for: .seconds(2)) // let the window appear first
+            await Updater.check()
+        }
+        Task {
             while true {
                 refreshSteam()
                 try? await Task.sleep(for: .seconds(4))
@@ -272,9 +276,13 @@ final class Launcher: ObservableObject {
         try await rt.download(Remote.steamSetup, to: setup, label: "Downloading Steam", reporter(.steam))
         status[.steam]?.progress = nil
         setDetail(.steam, "Installing…")
-        try await rt.wine([setup.path, "/S"], prefix: prefix)
+        let code = try await rt.wine([setup.path, "/S"], prefix: prefix)
         try? fm.removeItem(at: setup)
-        guard steamInstalled else { throw SetupError("Steam installation failed.") }
+        guard steamInstalled else {
+            let elsewhere = rt.findFiles(in: prefix.appending(path: "drive_c")) { $0.lastPathComponent.lowercased() == "steam.exe" }.first
+            rt.log("Steam installer exit code \(code); steam.exe found at: \(elsewhere?.path ?? "nowhere")")
+            throw SetupError("Steam installation failed (installer code \(code)" + (elsewhere.map { ", Steam landed in \($0.deletingLastPathComponent().path.tilde)" } ?? "") + "). See the log for details.")
+        }
         return "Installed"
     }
 

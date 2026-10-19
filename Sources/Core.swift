@@ -9,6 +9,8 @@ enum Remote {
     // GameHub CDN builds (same files GameHub installs); checksums from GameHub's own metadata
     static let wine = URL(string: "https://gamehub-cdn.youwo.com/uploads/emulator/20260928/a4d87d22d80f462c8bb1a60bf0ca6ec6.zst")!
     static let wineSHA = "d85b764deaadc7094c265d33446ecd5e617af0b6f5cc88424cd0ab9bbc6b7b96"
+    // `wine --version` of that build; a GameHub install is only reused when it is exactly this one
+    static let wineVersion = "wine-11.0-g72ab2268eb3"
     static let gptk = URL(string: "https://gamehub-cdn.youwo.com/uploads/emulator/20260805/cf228daa416d4c8c8c1a66c5cae11a0b.tzst")!
     static let gptkSHA = "ef025bdcfe040f056345439d593d2f42ae72869ab92c8745726d4633a13997be"
 }
@@ -90,14 +92,23 @@ struct Runtime {
         for install in (try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? [] {
             let bin = install.appending(path: "bin/wine").path
             guard fm.isExecutableFile(atPath: bin) else { continue }
-            let version = await Task.detached { Shell.output(bin, ["--version"]) }.value
-            if version.hasPrefix("wine-11") { return install }
+            if await Self.version(of: bin) == Remote.wineVersion { return install }
         }
         return nil
     }
 
+    private static func version(of wine: String) async -> String {
+        await Task.detached { Shell.output(wine, ["--version"]).trimmingCharacters(in: .whitespacesAndNewlines) }.value
+    }
+
     func installWine(_ report: @escaping Report) async throws -> String {
-        if fm.isExecutableFile(atPath: wineBin.path) { return "Already installed" }
+        if fm.isExecutableFile(atPath: wineBin.path) {
+            let installed = await Self.version(of: wineBin.path)
+            if installed == Remote.wineVersion { return "Already installed" }
+            // older launchers copied any GameHub Wine 11; replace other builds with the tested one
+            report("Replacing \(installed.isEmpty ? "unknown Wine" : installed)…", nil)
+            try fm.removeItem(at: wineRoot)
+        }
         try fm.createDirectory(at: runtime, withIntermediateDirectories: true)
         let tmp = runtime.appending(path: ".wine-tmp")
         try? fm.removeItem(at: tmp)

@@ -81,6 +81,8 @@ Turning it off switches `Skate.exe` back to Wine's own `dxgi.dll`, so the files 
 2. The app isn't notarized, so macOS blocks the first launch. Right-click → **Open** → **Open**, or allow it under System Settings → Privacy & Security.
 3. Click **INSTALL**.
 
+The launcher checks GitHub for a new release when it starts. If there is one, it asks first, then downloads it (checked against GitHub's SHA-256), replaces itself and restarts. Your Wine, game and settings stay.
+
 ## Build from source
 
 Needs the Xcode command line tools.

@@ -50,7 +50,7 @@ struct UserChip: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text("Welcome, \(launcher.displayName)").font(Theme.bold(13))
-                Text("Mac Launcher 1.1").font(Theme.medium(11)).foregroundStyle(Theme.dim)
+                Text("Mac Launcher \(Updater.current)").font(Theme.medium(11)).foregroundStyle(Theme.dim)
             }
             .padding(.horizontal, 12)
             .frame(width: 210, height: 40, alignment: .leading)
